@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SonarQube Cloud Code Quality Demo</title>
+    <!-- Google Fonts: Outfit & Plus Jakarta Sans -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-gradient: radial-gradient(circle at 0% 0%, #161233 0%, #0d0a1a 100%);
+            --card-bg: rgba(255, 255, 255, 0.03);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --card-border-hover: rgba(255, 255, 255, 0.16);
+            --text-primary: #f3f4f6;
+            --text-secondary: #9ca3af;
+            
+            /* Status Colors */
+            --color-vulnerability: #f87171;
+            --color-bug: #f59e0b;
+            --color-smell: #38bdf8;
+            --color-success: #34d399;
+            
+            /* Highlights */
+            --primary-accent: #818cf8;
+            --primary-glow: rgba(129, 140, 248, 0.15);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: var(--bg-gradient);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 2rem 1.5rem;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        h1, h2, h3, h4 {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Header design */
+        header {
+            text-align: center;
+            margin-bottom: 4rem;
+            position: relative;
+        }
+
+        header::before {
+            content: '';
+            position: absolute;
+            top: -50px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(129, 140, 248, 0.2) 0%, rgba(0,0,0,0) 70%);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .logo-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(129, 140, 248, 0.1);
+            border: 1px solid rgba(129, 140, 248, 0.2);
+            padding: 0.5rem 1.25rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--primary-accent);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 1.5rem;
+            backdrop-filter: blur(10px);
+        }
+
+        header h1 {
+            font-size: 3rem;
+            letter-spacing: -0.03em;
+            background: linear-gradient(135deg, #ffffff 0%, #9ca3af 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 1rem;
+        }
+
+        header p {
+            color: var(--text-secondary);
+            font-size: 1.125rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Main Dashboard Grid */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-bottom: 4rem;
+        }
+
+        /* Glassmorphism Card Style */
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 24px;
+            padding: 2.25rem;
+            backdrop-filter: blur(20px);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            border-color: var(--card-border-hover);
+            box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5), 0 0 50px -10px var(--primary-glow);
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+        }
+
+        .card.vulnerability::before { background: var(--color-vulnerability); }
+        .card.bug::before { background: var(--color-bug); }
+        .card.smell::before { background: var(--color-smell); }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 48px;
+            height: 48px;
+            border-radius: 16px;
+            font-size: 1.5rem;
+        }
+
+        .vulnerability .card-icon { background: rgba(248, 113, 113, 0.1); color: var(--color-vulnerability); }
+        .bug .card-icon { background: rgba(245, 158, 11, 0.1); color: var(--color-bug); }
+        .smell .card-icon { background: rgba(56, 189, 248, 0.1); color: var(--color-smell); }
+
+        .card-title h2 {
+            font-size: 1.5rem;
+            letter-spacing: -0.02em;
+        }
+
+        .card-subtitle {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .card-body {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .card-description {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        /* Demo Playgrounds */
+        .playground {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 16px;
+            padding: 1.25rem;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .playground-title {
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--text-primary);
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        label {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .input-row {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        input[type="text"], select {
+            flex-grow: 1;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 0.6rem 1rem;
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        input[type="text"]:focus, select:focus {
+            outline: none;
+            border-color: var(--primary-accent);
+            background: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.25);
+        }
+
+        .btn {
+            background: var(--primary-accent);
+            color: #0d0a1a;
+            border: none;
+            border-radius: 8px;
+            padding: 0.6rem 1.25rem;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        .btn-vuln { background: var(--color-vulnerability); color: #161233; }
+        .btn-bug { background: var(--color-bug); color: #161233; }
+        .btn-smell { background: var(--color-smell); color: #161233; }
+
+        .console-output {
+            background: #080612;
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            font-family: monospace;
+            font-size: 0.85rem;
+            color: #a78bfa;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            min-height: 50px;
+            max-height: 120px;
+            overflow-y: auto;
+            word-break: break-all;
+            white-space: pre-wrap;
+        }
+
+        .console-output.error {
+            color: var(--color-vulnerability);
+        }
+
+        /* Secrets Display Block */
+        .code-display {
+            background: rgba(0, 0, 0, 0.25);
+            border-radius: 12px;
+            padding: 1rem;
+            font-family: monospace;
+            font-size: 0.8rem;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            overflow-x: auto;
+            position: relative;
+        }
+
+        .code-display::before {
+            content: "CODE SNIPPET";
+            position: absolute;
+            top: 4px;
+            right: 8px;
+            font-size: 0.65rem;
+            color: var(--text-secondary);
+            letter-spacing: 0.05em;
+        }
+
+        .highlight-red { color: var(--color-vulnerability); }
+        .highlight-yellow { color: var(--color-bug); }
+        .highlight-blue { color: var(--color-smell); }
+        .comment { color: #6b7280; font-style: italic; }
+
+        /* Configuration Properties Section */
+        .config-section {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 24px;
+            padding: 2.5rem;
+            backdrop-filter: blur(20px);
+            margin-top: 2rem;
+            border-color: rgba(129, 140, 248, 0.2);
+        }
+
+        .config-title {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1.75rem;
+            margin-bottom: 1rem;
+            color: #ffffff;
+        }
+
+        .config-description {
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+        }
+
+        .config-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .config-grid {
+                grid-template-columns: 1fr;
+            }
+            header h1 {
+                font-size: 2.25rem;
+            }
+        }
+
+        .config-card {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 1.5rem;
+        }
+
+        .config-card h3 {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            color: var(--primary-accent);
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 5rem;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            padding-top: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo-badge">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="vertical-align: middle; margin-right: 4px;">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+                </svg>
+                Master's presentation
+            </div>
+            <h1>SonarQube Cloud Demo Platform</h1>
+            <p>An interactive testing dashboard designed to showcase intentional code quality issues, security vulnerabilities, and logic bugs flagged by SonarQube Cloud scanner.</p>
+        </header>
+
+        <div class="dashboard-grid">
+            
+            <!-- SECTION 1: SECURITY VULNERABILITIES -->
+            <section class="card vulnerability">
+                <div class="card-header">
+                    <div class="card-icon">🔑</div>
+                    <div class="card-title">
+                        <div class="card-subtitle">Security Vulnerability</div>
+                        <h2>Vulnerabilities</h2>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <p class="card-description">
+                        SonarQube scans for code vulnerabilities like hardcoded credentials and dangerous execution sinks that can compromise system integrity.
+                    </p>
+
+                    <!-- Secret Leak Showcase -->
+                    <div class="playground">
+                        <div class="playground-title">🔥 Vulnerability 1: Hardcoded Secrets</div>
+                        <div class="code-display">
+<span class="comment">// server.js</span>
+const AWS_SECRET_ACCESS_KEY = <span class="highlight-red">"wJalrXUtn..."</span>;
+const SONAR_DEMO_API_KEY = <span class="highlight-red">"sqc_7a9f8e4b..."</span>;
+                        </div>
+                    </div>
+
+                    <!-- Eval Input Sandbox -->
+                    <div class="playground">
+                        <div class="playground-title">⚡ Vulnerability 2: Unsafe eval()</div>
+                        <div class="form-group">
+                            <label for="eval-input">JavaScript Expression (executed server-side):</label>
+                            <div class="input-row">
+                                <input type="text" id="eval-input" value="2 * (3 + 5)">
+                                <button class="btn btn-vuln" onclick="runEval()">Execute</button>
+                            </div>
+                        </div>
+                        <label>Console Server Response:</label>
+                        <div id="eval-output" class="console-output">Waiting for execution...</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION 2: CODE BUGS -->
+            <section class="card bug">
+                <div class="card-header">
+                    <div class="card-icon">🪲</div>
+                    <div class="card-title">
+                        <div class="card-subtitle">Reliability Issues</div>
+                        <h2>Logic Bugs</h2>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <p class="card-description">
+                        SonarQube checks for unreachable statements and potential runtime exceptions that cause unexpected system crashes.
+                    </p>
+
+                    <!-- Unreachable Code Showcase -->
+                    <div class="playground">
+                        <div class="playground-title">🚫 Bug 1: Unreachable Statements</div>
+                        <div class="code-display">
+<span class="comment">// utils/calculator.js</span>
+case 'add':
+    result = a + b;
+    <span class="highlight-yellow">return result;</span>
+    <span class="comment" style="text-decoration: line-through;">console.log("Addition completed!");</span> <span class="highlight-red">&larr; Unreachable</span>
+                        </div>
+                    </div>
+
+                    <!-- Undefined Reference Sandbox -->
+                    <div class="playground">
+                        <div class="playground-title">💥 Bug 2: Null/Undefined Reference</div>
+                        <div class="form-group">
+                            <label>Run math calculation via API:</label>
+                            <div class="input-row">
+                                <select id="calc-op">
+                                    <option value="add">Add (+)</option>
+                                    <option value="subtract">Subtract (-)</option>
+                                    <option value="multiply">Multiply (*)</option>
+                                    <option value="divide">Divide (/)</option>
+                                </select>
+                                <input type="text" id="calc-a" placeholder="a" style="width: 60px; flex-grow: 0;" value="10">
+                                <input type="text" id="calc-b" placeholder="b" style="width: 60px; flex-grow: 0;" value="5">
+                                <button class="btn btn-bug" onclick="runCalculate(false)">Calculate</button>
+                            </div>
+                        </div>
+                        <div style="margin-bottom: 1rem;">
+                            <button class="btn btn-bug" style="width: 100%;" onclick="runCalculate(true)">
+                                Trigger Undefined Reference Crash
+                            </button>
+                        </div>
+                        <label>Console Server Response:</label>
+                        <div id="bug-output" class="console-output">Waiting for execution...</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION 3: CODE SMELLS -->
+            <section class="card smell">
+                <div class="card-header">
+                    <div class="card-icon">🧼</div>
+                    <div class="card-title">
+                        <div class="card-subtitle">Maintainability Issues</div>
+                        <h2>Code Smells</h2>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <p class="card-description">
+                        Code smells indicate code quality issues that make maintenance difficult. These include duplicate logic, unused variables, and leftovers.
+                    </p>
+
+                    <!-- Duplicated block display -->
+                    <div class="playground">
+                        <div class="playground-title">👥 Smell 1: Duplicated Blocks</div>
+                        <div class="code-display" style="font-size: 0.75rem;">
+<span class="comment">// server.js</span>
+function <span class="highlight-blue">formatResponse</span>(data) {
+    const timestamp = new Date().toISOString();
+    return { success: true, data, timestamp };
+}
+<span class="comment">// Identical Block:</span>
+function <span class="highlight-blue">formatResult</span>(data) {
+    const timestamp = new Date().toISOString();
+    return { success: true, data, timestamp };
+}
+                        </div>
+                    </div>
+
+                    <!-- Commented code display -->
+                    <div class="playground">
+                        <div class="playground-title">💬 Smell 2: Commented-out Source Code</div>
+                        <div class="code-display">
+<span class="comment">/* 
+function legacyCalculator(op, x, y) {
+    if (op === 'add') return x + y;
+    ...
+}
+*/</span> <span class="highlight-blue">&larr; SonarQube flags commented-out blocks</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- SONAR CONFIGURATION DISPLAY -->
+        <section class="config-section">
+            <h2 class="config-title">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.1a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+                    <circle cx="12" cy="12" r="3"/>
+                </svg>
+                SonarQube Integration Config
+            </h2>
+            <p class="config-description">These configuration files are located in the repository root and CI directory, facilitating automated analysis scans on SonarQube Cloud.</p>
+            
+            <div class="config-grid">
+                <div class="config-card">
+                    <h3>📄 sonar-project.properties</h3>
+                    <div class="code-display" style="font-size: 0.8rem;">
+sonar.organization=[YOUR_ORG]
+sonar.projectKey=[YOUR_PROJECT_KEY]
+sonar.projectName=[YOUR_PROJECT_NAME]
+sonar.sources=.
+sonar.exclusions=node_modules/**, public/**
+sonar.javascript.lcov.reportPaths=coverage/lcov.info
+                    </div>
+                </div>
+
+                <div class="config-card">
+                    <h3>🚀 GitHub Actions: sonar.yml</h3>
+                    <div class="code-display" style="font-size: 0.75rem; height: 160px;">
+name: SonarQube Analysis
+on:
+  push:
+    branches: [ main ]
+jobs:
+  sonarcloud:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: SonarQube Scan
+        uses: SonarSource/sonarqube-scan-action@v3
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <footer>
+            <p>&copy; 2026 SonarQube Cloud presentation. Created for Master's level Security & Code Quality demonstration.</p>
+        </footer>
+    </div>
+
+    <script>
+        async function runEval() {
+            const val = document.getElementById('eval-input').value;
+            const outputEl = document.getElementById('eval-output');
+            outputEl.classList.remove('error');
+            outputEl.textContent = 'Calling server API /api/eval...';
+            
+            try {
+                const response = await fetch(`/api/eval?expr=${encodeURIComponent(val)}`);
+                const data = await response.json();
+                if (response.ok) {
+                    outputEl.textContent = JSON.stringify(data, null, 2);
+                } else {
+                    outputEl.classList.add('error');
+                    outputEl.textContent = `Server Error (${response.status}):\n` + JSON.stringify(data, null, 2);
+                }
+            } catch (err) {
+                outputEl.classList.add('error');
+                outputEl.textContent = 'Network or Client Error:\n' + err.message;
+            }
+        }
+
+        async function runCalculate(triggerCrash) {
+            const op = document.getElementById('calc-op').value;
+            const outputEl = document.getElementById('bug-output');
+            outputEl.classList.remove('error');
+            
+            let url = '';
+            if (triggerCrash) {
+                // To trigger undefined/null dereference bug, we do not pass inputs 'a' and 'b' to calculate
+                url = `/api/calculate?operation=add`;
+                outputEl.textContent = 'Calling server API /api/calculate with MISSING a and b parameters to trigger TypeError...';
+            } else {
+                const a = document.getElementById('calc-a').value;
+                const b = document.getElementById('calc-b').value;
+                url = `/api/calculate?operation=${op}&a=${encodeURIComponent(a)}&b=${encodeURIComponent(b)}`;
+                outputEl.textContent = `Calling server API /api/calculate?operation=${op}&a=${a}&b=${b}...`;
+            }
+            
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+                if (response.ok) {
+                    outputEl.textContent = JSON.stringify(data, null, 2);
+                } else {
+                    outputEl.classList.add('error');
+                    outputEl.textContent = `Server Error (${response.status}):\n` + JSON.stringify(data, null, 2);
+                }
+            } catch (err) {
+                outputEl.classList.add('error');
+                outputEl.textContent = 'Network or Client Error:\n' + err.message;
+            }
+        }
+    </script>
+</body>
+</html>

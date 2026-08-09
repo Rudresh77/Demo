@@ -1,0 +1,14 @@
+{
+  "name": "sonarqube-cloud-demo",
+  "version": "1.0.0",
+  "description": "A demo Node.js + Express application featuring intentional security vulnerabilities, bugs, and code smells for SonarQube Cloud presentations.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  },
+  "private": true
+}
