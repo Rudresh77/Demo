@@ -89,20 +89,20 @@ router.get('/registrations/search', (req, res) => {
      [WHAT SONARQUBE FLAGS]: SQL Injection via raw template string concatenation.
      [DEMO TALKING POINT]: Using string template concatenation for query inputs allows attackers to perform SQL Injection. Let's fix it by using a parameterized query.
      ======================================================== */
-  const query = `SELECT * FROM registrations WHERE student_name LIKE '%${lowerSearch}%' OR event_name LIKE '%${lowerSearch}%'`;
-  pool.query(query, (err, results) => {
-    if (err) {
-      return res.status(500).json({ error: err.message });
-    }
-    res.json(results);
-  });
-  // [DEMO FIX - UNCOMMENT TO RESOLVE]:
-  // const query = 'SELECT * FROM registrations WHERE student_name LIKE ? OR event_name LIKE ?';
-  // const placeholder = `%${lowerSearch}%`;
-  // pool.query(query, [placeholder, placeholder], (err, results) => {
-  //   if (err) return res.status(500).json({ error: err.message });
+  // const query = `SELECT * FROM registrations WHERE student_name LIKE '%${lowerSearch}%' OR event_name LIKE '%${lowerSearch}%'`;
+  // pool.query(query, (err, results) => {
+  //   if (err) {
+  //     return res.status(500).json({ error: err.message });
+  //   }
   //   res.json(results);
   // });
+  // [DEMO FIX - UNCOMMENT TO RESOLVE]:
+  const query = 'SELECT * FROM registrations WHERE student_name LIKE ? OR event_name LIKE ?';
+  const placeholder = `%${lowerSearch}%`;
+  pool.query(query, [placeholder, placeholder], (err, results) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(results);
+  });
 
 });
 
@@ -129,42 +129,42 @@ router.post('/registrations', (req, res) => {
      [WHAT SONARQUBE FLAGS]: Deeply nested and redundant conditional logic.
      [DEMO TALKING POINT]: Multiple nested ifs that perform simple validations can be simplified to a single line or early guard clauses, improving readability.
      ======================================================== */
-  if (student_name) {
-    if (email) {
-      if (event_name) {
-        if (registration_date) {
-          const isFlagged = flagged === true || flagged === 'true' ? 1 : 0;
-          const query = 'INSERT INTO registrations (student_name, email, event_name, registration_date, flagged) VALUES (?, ?, ?, ?, ?)';
-          pool.query(query, [student_name, email, event_name, registration_date, isFlagged], (err, results) => {
-            if (err) {
-              return res.status(500).json({ error: err.message });
-            }
-            return res.status(201).json({ message: 'Registration added successfully', id: results.insertId });
-          });
-        } else {
-          return res.status(400).json({ error: 'Registration date is required' });
-        }
-      } else {
-        return res.status(400).json({ error: 'Event name is required' });
-      }
-    } else {
-      return res.status(400).json({ error: 'Email is required' });
-    }
-  } else {
-    return res.status(400).json({ error: 'Student name is required' });
-  }
-
-  /* [DEMO FIX - UNCOMMENT TO RESOLVE]:
-  // if (!student_name || !email || !event_name || !registration_date) {
-  //   return res.status(400).json({ error: 'All fields are required' });
+  // if (student_name) {
+  //   if (email) {
+  //     if (event_name) {
+  //       if (registration_date) {
+  //         const isFlagged = flagged === true || flagged === 'true' ? 1 : 0;
+  //         const query = 'INSERT INTO registrations (student_name, email, event_name, registration_date, flagged) VALUES (?, ?, ?, ?, ?)';
+  //         pool.query(query, [student_name, email, event_name, registration_date, isFlagged], (err, results) => {
+  //           if (err) {
+  //             return res.status(500).json({ error: err.message });
+  //           }
+  //           return res.status(201).json({ message: 'Registration added successfully', id: results.insertId });
+  //         });
+  //       } else {
+  //         return res.status(400).json({ error: 'Registration date is required' });
+  //       }
+  //     } else {
+  //       return res.status(400).json({ error: 'Event name is required' });
+  //     }
+  //   } else {
+  //     return res.status(400).json({ error: 'Email is required' });
+  //   }
+  // } else {
+  //   return res.status(400).json({ error: 'Student name is required' });
   // }
-  // const isFlagged = flagged === true || flagged === 'true' ? 1 : 0;
-  // const query = 'INSERT INTO registrations (student_name, email, event_name, registration_date, flagged) VALUES (?, ?, ?, ?, ?)';
-  // pool.query(query, [student_name, email, event_name, registration_date, isFlagged], (err, results) => {
-  //   if (err) return res.status(500).json({ error: err.message });
-  //   res.status(201).json({ message: 'Registration added successfully', id: results.insertId });
-  // });
-  */
+
+  //[DEMO FIX - UNCOMMENT TO RESOLVE]:
+  if (!student_name || !email || !event_name || !registration_date) {
+    return res.status(400).json({ error: 'All fields are required' });
+  }
+  const isFlagged = flagged === true || flagged === 'true' ? 1 : 0;
+  const query = 'INSERT INTO registrations (student_name, email, event_name, registration_date, flagged) VALUES (?, ?, ?, ?, ?)';
+  pool.query(query, [student_name, email, event_name, registration_date, isFlagged], (err, results) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.status(201).json({ message: 'Registration added successfully', id: results.insertId });
+  });
+
 });
 
 module.exports = router;
