@@ -11,10 +11,12 @@ document.addEventListener('DOMContentLoaded', () => {
      instead of legacy `setAttribute('data-theme', ...)`.
      ======================================================== */
   // --- LEGACY CODE (ACTIVE) ---
-  htmlEl.setAttribute('data-theme', savedTheme);
-  /* --- CLEAN PRODUCTION FIX (UNCOMMENT TO RESOLVE) ---
-  // htmlEl.dataset.theme = savedTheme;
-  */
+
+  // htmlEl.setAttribute('data-theme', savedTheme);
+
+  // --- CLEAN PRODUCTION FIX (UNCOMMENT TO RESOLVE) ---
+  htmlEl.dataset.theme = savedTheme;
+
 
   themeToggleBtn.addEventListener('click', () => {
     /* ========================================================
@@ -23,14 +25,16 @@ document.addEventListener('DOMContentLoaded', () => {
        instead of legacy `getAttribute('data-theme')` / `setAttribute('data-theme', ...)`.
        ======================================================== */
     // --- LEGACY CODE (ACTIVE) ---
-    const currentTheme = htmlEl.getAttribute('data-theme');
-    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-    htmlEl.setAttribute('data-theme', newTheme);
-    /* --- CLEAN PRODUCTION FIX (UNCOMMENT TO RESOLVE) ---
-    // const currentTheme = htmlEl.dataset.theme;
+
+    // const currentTheme = htmlEl.getAttribute('data-theme');
     // const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-    // htmlEl.dataset.theme = newTheme;
-    */
+    // htmlEl.setAttribute('data-theme', newTheme);
+
+    //CLEAN PRODUCTION FIX (UNCOMMENT TO RESOLVE) ---
+    const currentTheme = htmlEl.dataset.theme;
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    htmlEl.dataset.theme = newTheme;
+
     localStorage.setItem('theme', newTheme);
   });
 
@@ -54,7 +58,7 @@ document.addEventListener('DOMContentLoaded', () => {
     tableBody.innerHTML = `<tr><td colspan="5" class="loading-state">Loading registrations...</td></tr>`;
 
     try {
-      const url = searchQuery 
+      const url = searchQuery
         ? `/api/registrations/search?query=${encodeURIComponent(searchQuery)}`
         : '/api/registrations';
 
@@ -85,7 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
         day: 'numeric'
       });
 
-      const statusBadge = reg.flagged 
+      const statusBadge = reg.flagged
         ? `<span class="badge warning">Flagged</span>`
         : `<span class="badge success">Active</span>`;
 
@@ -109,14 +113,21 @@ document.addEventListener('DOMContentLoaded', () => {
   // --- LEGACY CODE (ACTIVE) ---
   function escapeHtml(str) {
     if (!str) return '';
-    return str.replace(/[&<>'"]/g, 
+    return str.replace(/[&<>'"]/g,
+      // tag => ({
+      //   '&': '&amp;',
+      //   '<': '&lt;',
+      //   '>': '&gt;',
+      //   "'": '&#39;',
+      //   '"': '&quot;'
+      // }[tag] || tag)
       tag => ({
         '&': '&amp;',
         '<': '&lt;',
         '>': '&gt;',
         "'": '&#39;',
         '"': '&quot;'
-      }[tag] || tag)
+      }[tag])
     );
   }
   /* --- CLEAN PRODUCTION FIX (UNCOMMENT TO RESOLVE) ---

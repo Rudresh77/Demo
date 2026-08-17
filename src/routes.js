@@ -29,36 +29,36 @@ router.get('/stats', (req, res) => {
      [WHAT SONARQUBE FLAGS]: Duplicated calculation blocks / nested query callbacks.
      [DEMO TALKING POINT]: We have duplicated database query wrappers that can be simplified into a cleaner, single-query structure.
      ======================================================== */
-  pool.query('SELECT COUNT(*) AS total FROM registrations', (err, r1) => {
+  // pool.query('SELECT COUNT(*) AS total FROM registrations', (err, r1) => {
+  //   if (err) return res.status(500).json({ error: err.message });
+
+  //   pool.query('SELECT COUNT(DISTINCT event_name) AS total FROM registrations', (err, r2) => {
+  //     if (err) return res.status(500).json({ error: err.message });
+
+  //     pool.query('SELECT COUNT(*) AS total FROM registrations WHERE flagged = TRUE', (err, r3) => {
+  //       if (err) return res.status(500).json({ error: err.message });
+
+  //       res.json({
+  //         totalRegistrations: r1[0].total,
+  //         activeEvents: r2[0].total,
+  //         flaggedEntries: r3[0].total
+  //       });
+  //     });
+  //   });
+  // });
+
+  // [DEMO FIX - UNCOMMENT TO RESOLVE]:
+  const sql = `
+    SELECT 
+      (SELECT COUNT(*) FROM registrations) as totalRegistrations,
+      (SELECT COUNT(DISTINCT event_name) FROM registrations) as activeEvents,
+      (SELECT COUNT(*) FROM registrations WHERE flagged = TRUE) as flaggedEntries
+  `;
+  pool.query(sql, (err, results) => {
     if (err) return res.status(500).json({ error: err.message });
-
-    pool.query('SELECT COUNT(DISTINCT event_name) AS total FROM registrations', (err, r2) => {
-      if (err) return res.status(500).json({ error: err.message });
-
-      pool.query('SELECT COUNT(*) AS total FROM registrations WHERE flagged = TRUE', (err, r3) => {
-        if (err) return res.status(500).json({ error: err.message });
-
-        res.json({
-          totalRegistrations: r1[0].total,
-          activeEvents: r2[0].total,
-          flaggedEntries: r3[0].total
-        });
-      });
-    });
+    res.json(results[0]);
   });
 
-  /* [DEMO FIX - UNCOMMENT TO RESOLVE]:
-  // const sql = `
-  //   SELECT 
-  //     (SELECT COUNT(*) FROM registrations) as totalRegistrations,
-  //     (SELECT COUNT(DISTINCT event_name) FROM registrations) as activeEvents,
-  //     (SELECT COUNT(*) FROM registrations WHERE flagged = TRUE) as flaggedEntries
-  // `;
-  // pool.query(sql, (err, results) => {
-  //   if (err) return res.status(500).json({ error: err.message });
-  //   res.json(results[0]);
-  // });
-  */
 });
 
 // SEARCH registrations with SQL Injection vulnerability & Bug (Null Pointer)
@@ -70,10 +70,11 @@ router.get('/registrations/search', (req, res) => {
      [WHAT SONARQUBE FLAGS]: Accessing property/method on potentially null/undefined value without a check.
      [DEMO TALKING POINT]: Calling '.toLowerCase()' directly on 'searchTerm' (which can be null or undefined if the query parameter is missing) will crash the server. Let's add a null check first.
      ======================================================== */
-  const lowerSearch = searchTerm.toLowerCase();
-  /* [DEMO FIX - UNCOMMENT TO RESOLVE]:
-  // const lowerSearch = searchTerm ? searchTerm.toLowerCase() : '';
-  */
+  // const lowerSearch = searchTerm.toLowerCase();
+
+  // [DEMO FIX - UNCOMMENT TO RESOLVE]:
+  const lowerSearch = searchTerm ? searchTerm.toLowerCase() : '';
+
 
 
 
