@@ -5,12 +5,32 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Load saved theme
   const savedTheme = localStorage.getItem('theme') || 'dark';
+  /* ========================================================
+     [SONARQUBE ISSUE]: Code Smell / Maintainability (Consistency)
+     [WHY IT IS FLAGGED]: Use the standard HTML5 Dataset API (`.dataset.theme`) 
+     instead of legacy `setAttribute('data-theme', ...)`.
+     ======================================================== */
+  // --- LEGACY CODE (ACTIVE) ---
   htmlEl.setAttribute('data-theme', savedTheme);
+  /* --- CLEAN PRODUCTION FIX (UNCOMMENT TO RESOLVE) ---
+  // htmlEl.dataset.theme = savedTheme;
+  */
 
   themeToggleBtn.addEventListener('click', () => {
+    /* ========================================================
+       [SONARQUBE ISSUE]: Code Smell / Maintainability (Consistency)
+       [WHY IT IS FLAGGED]: Use the standard HTML5 Dataset API (`.dataset.theme`) 
+       instead of legacy `getAttribute('data-theme')` / `setAttribute('data-theme', ...)`.
+       ======================================================== */
+    // --- LEGACY CODE (ACTIVE) ---
     const currentTheme = htmlEl.getAttribute('data-theme');
     const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
     htmlEl.setAttribute('data-theme', newTheme);
+    /* --- CLEAN PRODUCTION FIX (UNCOMMENT TO RESOLVE) ---
+    // const currentTheme = htmlEl.dataset.theme;
+    // const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    // htmlEl.dataset.theme = newTheme;
+    */
     localStorage.setItem('theme', newTheme);
   });
 
@@ -81,6 +101,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }).join('');
   }
 
+  /* ========================================================
+     [SONARQUBE ISSUE]: Code Smell / Maintainability (Function Nesting)
+     [WHY IT IS FLAGGED]: Move function 'escapeHtml' to the outer scope. 
+     Nested utility declarations re-allocate memory on every event trigger.
+     ======================================================== */
+  // --- LEGACY CODE (ACTIVE) ---
   function escapeHtml(str) {
     if (!str) return '';
     return str.replace(/[&<>'"]/g, 
@@ -93,6 +119,9 @@ document.addEventListener('DOMContentLoaded', () => {
       }[tag] || tag)
     );
   }
+  /* --- CLEAN PRODUCTION FIX (UNCOMMENT TO RESOLVE) ---
+  // (Move the escapeHtml function definition to the top-level outer scope of the file, outside of the DOMContentLoaded listener)
+  */
 
   // Handle Search Input
   const searchInput = document.getElementById('search-input');
