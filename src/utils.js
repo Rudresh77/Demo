@@ -32,7 +32,7 @@ function validateEmail(email) {
 }
 
 /**
- * Formats a date string or object to YYYY-MM-DD.
+ * Formats a date string or object to YYYY-MM-DD .
  * @param {string|Date} date 
  * @returns {string}
  */
